@@ -337,9 +337,9 @@ def steepest_descent(positions, forces, nsteep, Csteep, ret_fmax_epot = False):
         _nghbrs = neighbors_list(pos)
         f, fmax = calc_forces(_nghbrs, pos, return_max_force = True)
         for i in range(n):
-            pos[i][0] = pos[i][0]+_Csteep * f[i, 0]
-            pos[i][1] = pos[i][1]+_Csteep * f[i, 1]
-            pos[i][2] = pos[i][2]+_Csteep * f[i, 2]
+            pos[i][0] = pos[i][0] + _Csteep * f[i, 0]
+            pos[i][1] = pos[i][1] + _Csteep * f[i, 1]
+            pos[i][2] = pos[i][2] + _Csteep * f[i, 2]
         Epot = potential_energy(pos, _nghbrs)
         fmax_array[_] = fmax
         print(fmax, Epot)

@@ -174,10 +174,10 @@ function calc_forces(neighbors, positions, return_max_force = false)
             f[k, 2] += c1 * dy[k, i]
             f[k, 3] += c1 * dz[k, i]
 
-            #force_magnitude = sqrt(f[k, 1] ^ 2 + f[k, 2] ^ 2 + f[k, 3] ^ 2)
-            #if force_magnitude > max_force_magnitude
-            #    max_force_magnitude = force_magnitude  # Update maximum force magnitude
-            #end
+            force_magnitude = sqrt(f[k, 1] ^ 2 + f[k, 2] ^ 2 + f[k, 3] ^ 2)
+            if force_magnitude > max_force_magnitude
+                max_force_magnitude = force_magnitude  # Update maximum force magnitude
+            end
         end
     end
 
@@ -192,16 +192,18 @@ function steepest_descent(positions, forces, nsteep, Csteep)
     f = forces
     pos = positions
     fmax = 0
-    for i in 1:nsteep
+    for _ in 1:nsteep
         _nghbrs = neighbors_list(pos)
         f, fmax = calc_forces(_nghbrs, pos, true)
         for i in 1:n
-            pos[i, 1] = pos[i, 1] + Csteep * f[i, 1]
-            pos[i, 2] = pos[i, 2] + Csteep * f[i, 2]
-            pos[i, 3] = pos[i, 3] + Csteep * f[i, 3]
+            for k in 1:3
+                pos[i, k] = pos[i, k] + Csteep * f[i, k]
+            end
         end
+        #println(fmax)
     end
-    return pos
+
+    return pos, fmax
 end
 
 function update_position!(pos, velocities, forces, dt)
@@ -226,7 +228,7 @@ function create_animation(filtered_positions, n_timesteps)
     anim = Animation()
 
     for t in 1:n_timesteps
-        
+
         # Extract positions for this timestep
         positions_at_t = filtered_positions[:, :, t]
 
@@ -307,7 +309,7 @@ function Verlet2(positions, neighbors, velocity, nmd, dt, nsteep, csteep)
     nghbrs = neighbors
     velocities = velocity
     forces = calc_forces(nghbrs, pos)
-    pos = steepest_descent(pos, forces, nsteep, Csteep)
+    pos, fmax = steepest_descent(pos, forces, nsteep, Csteep)
 
     anim_timestep = nmd ÷ anim_frequency
 
@@ -335,24 +337,25 @@ function Verlet2(positions, neighbors, velocity, nmd, dt, nsteep, csteep)
         global temperatures[ind] = avg_temp(velocities)
         global ev_Energy[ind] = Epot + Ekin
     end
-    return temperatures, ev_Energy, z0_positions
+    return temperatures, ev_Energy, z0_positions, fmax
 end
 
 
 #Initial temperature
-const Tin = 210
-const nmd = 10000
-const dt = 1e-15
-const nsteep = 10
-const Csteep = 0.01
-const anim_frequency = 10
+const Tin = 1000
+const dt = 2e-15
+const nsteep = 600
+const Csteep = 0.001
+const anim_frequency = 30
+const nmd = Int((3e-12 + 1e-11)/dt)
 
 filenames = ["fcc256.txt"]
 positions = readdlm(filenames[1], ' ', Float64)
 neighbors = neighbors_list(positions)
 velocities = assgn_mom_sub_velocities(Tin) 
 
-T_array, Etot_array, z0_positions = Verlet2(positions, neighbors, velocities, nmd, dt, nsteep, Csteep)
+T_array, Etot_array, z0_positions, fmax = Verlet2(positions, neighbors, velocities, nmd, dt, nsteep, Csteep)
+
 # Calculate the timesteps
 timesteps = (1:nmd) .* dt
 
@@ -363,19 +366,21 @@ filtered_T_array = T_array[filtered_indices]
 filtered_Etot_array = Etot_array[filtered_indices]
 
 # Plot Temperature vs. Timestep after dt * ind > 3e-12
-plot(filtered_timesteps, filtered_T_array, title = "Temperature vs Time", xlabel = "Timestep", ylabel = "Temperature", legend = false, ylim = (0, 300))
+plot(filtered_timesteps, filtered_T_array, title = "Temperature vs Time", xlabel = "Timestep", ylabel = "Temperature", legend = false, ylim = (0, 800))
 
 # Save the temperature plot if needed
 savefig("temperature_vs_time_filtered.png")
 
 # Plot Total Energy vs. Timestep after dt * ind > 3e-12
-plot(filtered_timesteps, filtered_Etot_array, title = "Total Energy vs Time", xlabel = "Timestep", ylabel = "Total Energy", color = :red, legend = false, ylim = (-450, -430))
+plot(filtered_timesteps, filtered_Etot_array, title = "Total Energy vs Time", xlabel = "Timestep", ylabel = "Total Energy", color = :red, legend = false, ylim = (-460, -380))
 
 # Save the total energy plot if needed
 savefig("total_energy_vs_time_filtered.png")
 
 
 create_animation(z0_positions, nmd ÷ anim_frequency)
+
+println(fmax)
 
 
 
