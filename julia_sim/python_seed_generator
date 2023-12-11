@@ -1,0 +1,13 @@
+import random
+import csv
+
+n = 256  # Number of particles (example)
+random.seed(-325420)
+
+# Generate random numbers
+random_numbers = [[random.gauss(0, 1) for _ in range(3)] for _ in range(n)]
+
+# Save to a CSV file
+with open('random_numbers.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerows(random_numbers)
