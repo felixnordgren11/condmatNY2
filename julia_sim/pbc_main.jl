@@ -411,57 +411,7 @@ savefig("total_energy_vs_time_filtered.png")
 
 create_animation(z0_positions, nmd ÷ anim_frequency)
 
-#=
 
-
-# Define different dt values
-dt_values = [1e-15, 2e-15, 4e-15, 8e-15, 13e-15]  # 1fs, 2fs, 4fs, 8fs, 13fs
-all_temperatures = []
-all_energies = []
-
-
-for dt in dt_values
-    # Load initial positions
-    positions = readdlm(filenames[1], ' ', Float64)
-
-    # Calculate initial neighbors
-    neighbors = neighbors_list(positions)
-
-    # Assign initial velocities
-    velocities = assgn_mom_sub_velocities(Tin, filename2)
-
-    # Run the simulation
-    temperatures, ev_Energy = Verlet2(positions, neighbors, velocities, dt)
-    push!(all_temperatures, temperatures)
-    push!(all_energies, ev_Energy)
-end
-
-# Plotting energies
-plot(legend = :topright)
-for (i, dt) in enumerate(dt_values)  # Total simulation time in seconds
-    nmd = Int((3e-12 + 1e-11) / dt)  # Number of simulation steps
-    time_array = (0:nmd-1) .* dt  # Time at each step
-
-    plot!(time_array, all_energies[i], label = "Energy (dt = $(dt)s)")
-end
-xlabel!("Time (s)")
-ylabel!("Energy")
-title!("Energy over Time for Different dt Values")
-savefig("energy_plot.png")
-
-# Plotting temperatures
-plot(legend = :topright)
-for (i, dt) in enumerate(dt_values)  # Total simulation time in seconds
-    nmd = Int((3e-12 + 1e-11)/ dt)  # Number of simulation steps
-    time_array = (0:nmd-1) .* dt  # Time at each step
-
-    plot!(time_array, all_temperatures[i], label = "Temperature (dt = $(dt)s)")
-end
-xlabel!("Time (s)")
-ylabel!("Temperature")
-title!("Temperature over Time for Different dt Values")
-savefig("temperature_plot.png")
-=#
 
 
 
